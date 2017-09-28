@@ -22,13 +22,13 @@ public interface RoleMapper extends Mapper {
      * @return 角色集合
      */
     @Results({
-            @Result(property = "accountId", column = "account_id"),
             @Result(property = "applicationId", column = "application_id"),
+            @Result(property = "accountId", column = "account_id"),
             @Result(property = "builtin", column = "is_builtin"),
             @Result(property = "creatorUserId", column = "creator_user_id"),
             @Result(property = "createdTime", column = "created_time")
     })
-    @Select("SELECT * FROM role WHERE application_id=#{appid};")
+    @Select("SELECT * FROM role WHERE application_id=#{appid} ORDER BY created_time;")
     List<Role> getRoles(@Param("appid") String appId);
 
     /**
@@ -38,8 +38,8 @@ public interface RoleMapper extends Mapper {
      * @return 角色实体
      */
     @Results({
-            @Result(property = "accountId", column = "account_id"),
             @Result(property = "applicationId", column = "application_id"),
+            @Result(property = "accountId", column = "account_id"),
             @Result(property = "builtin", column = "is_builtin"),
             @Result(property = "creatorUserId", column = "creator_user_id"),
             @Result(property = "createdTime", column = "created_time")
@@ -88,4 +88,78 @@ public interface RoleMapper extends Mapper {
             "SELECT m.id,m.type,m.member_id,o.`name`,o.remark FROM role_member m JOIN organization o ON o.id=m.member_id " +
             "WHERE m.type=3 AND m.role_id=#{id};")
     List<Member> getRoleMember(@Param("id") String roleId);
+
+    /**
+     * 新增角色
+     *
+     * @param role 角色实体
+     * @return 受影响行数
+     */
+    @Insert("INSERT role (id,application_id,account_id,`name`,remark,is_builtin,creator_user_id,created_time) " +
+            "VALUES (#{id},#{applicationId},#{accountId},#{name},#{remark},#{builtin},#{creatorUserId},#{createdTime});")
+    Integer addRole(Role role);
+
+    /**
+     * 删除角色及其权限和成员
+     *
+     * @param roleId 角色ID
+     * @return 受影响行数
+     */
+    @Delete("DELETE r,a,m FROM role r LEFT JOIN role_action a ON a.role_id=r.id LEFT JOIN role_member m ON m.role_id=r.id " +
+            "WHERE r.id=#{id}")
+    Integer deleteRole(@Param("id") String roleId);
+
+    /**
+     * 更新角色数据
+     *
+     * @param role 角色实体
+     * @return 受影响行数
+     */
+    @Update("UPDATE role SET `name`=#{name},remark=#{remark} WHERE id=#{id}")
+    Integer updateRole(Role role);
+
+    /**
+     * 添加角色功能
+     *
+     * @param role
+     * @return 受影响行数
+     */
+    @Insert("<script>INSERT role_action(id,role_id,function_id,action) VALUES " +
+            "<foreach collection = \"functions\" item = \"item\" index = \"index\" separator = \",\"> " +
+            "(uuid(),#{id},#{item.id},#{item.action}) " +
+            "</foreach></script>")
+    Integer addRoleFunction(Role role);
+
+    /**
+     * 移除角色功能
+     *
+     * @param roleId 角色ID
+     * @return 受影响行数
+     */
+    @Delete("delete from role_action where role_id=#{id}")
+    Integer removeRoleFunction(@Param("id") String roleId);
+
+    /**
+     * 添加角色成员
+     *
+     * @param members 成员集合
+     * @return 受影响行数
+     */
+    @Insert("<script>INSERT role_member(id,`type`,role_id,member_id) VALUES " +
+            "<foreach collection = \"list\" item = \"item\" index = \"index\" separator = \",\"> " +
+            "(#{item.id},#{item.type},#{item.parentId},#{item.memberId}) " +
+            "</foreach></script>")
+    Integer addRoleMember(List<Member> members);
+
+    /**
+     * 移除角色成员
+     *
+     * @param list ID集合
+     * @return 受影响行数
+     */
+    @Delete("<script>delete from role_member where id in" +
+            "<foreach collection = \"list\" item = \"item\" index = \"index\" open=\"(\" close=\")\" separator = \",\"> " +
+            "#{item} " +
+            "</foreach></script>")
+    Integer removeRoleMember(List<String> list);
 }

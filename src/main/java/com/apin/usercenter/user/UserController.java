@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/userapi")
 public class UserController {
+
     @Autowired
     private UserServices services;
 
@@ -25,7 +26,8 @@ public class UserController {
      * @return Reply
      */
     @GetMapping("/v1.1/users")
-    public Reply getUsers(@RequestHeader("Authorization") String token, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
+    public Reply getUsers(@RequestHeader("Authorization") String token, @RequestParam(defaultValue = "1") int page,
+                          @RequestParam(defaultValue = "20") int size) throws Exception {
         return services.getUsers(token, page, size);
     }
 
@@ -37,20 +39,22 @@ public class UserController {
      * @return Reply
      */
     @PostMapping("/v1.1/users")
-    public Reply addUser(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply addUser(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.addUser(token, user);
     }
 
     /**
      * 注册用户
      *
-     * @param token 访问令牌
-     * @param user  User实体,来自Body
+     * @param token    访问令牌
+     * @param user     User实体,来自Body
+     * @param initRole 是否初始化角色
      * @return Reply
      */
     @PostMapping("/v1.1/users/signup")
-    public Reply signUp(@RequestHeader("Authorization") String token, @RequestBody User user) {
-        return services.signUp(token, user);
+    public Reply signUp(@RequestHeader("Authorization") String token, @RequestBody User user,
+                        @RequestParam(value = "init", defaultValue = "false") Boolean initRole) throws Exception {
+        return services.signUp(token, user, initRole);
     }
 
     /**
@@ -61,7 +65,7 @@ public class UserController {
      * @return Reply
      */
     @DeleteMapping("/v1.1/users/{id}")
-    public Reply deleteUser(@RequestHeader("Authorization") String token, @PathVariable("id") String userId) {
+    public Reply deleteUser(@RequestHeader("Authorization") String token, @PathVariable("id") String userId) throws Exception {
         return services.deleteUser(token, userId);
     }
 
@@ -73,7 +77,7 @@ public class UserController {
      * @return Reply
      */
     @PutMapping("/v1.1/users/{id}/info")
-    public Reply updateUserInfo(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply updateUserInfo(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.updateUserInfo(token, user);
     }
 
@@ -85,7 +89,7 @@ public class UserController {
      * @return Reply
      */
     @PutMapping("/v1.1/users/{id}/type")
-    public Reply updateUserType(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply updateUserType(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.updateUserType(token, user);
     }
 
@@ -97,7 +101,7 @@ public class UserController {
      * @return Reply
      */
     @PutMapping("/v1.1/users/{id}/mobile")
-    public Reply updateUserMobile(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply updateUserMobile(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.updateUserMobile(token, user);
     }
 
@@ -109,7 +113,7 @@ public class UserController {
      * @return Reply
      */
     @PutMapping("/v1.1/users/{id}/email")
-    public Reply updateUserEmail(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply updateUserEmail(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.updateUserEmail(token, user);
     }
 
@@ -121,7 +125,7 @@ public class UserController {
      * @return Reply
      */
     @PutMapping("/v1.1/users/{id}/sign")
-    public Reply updatePassword(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply updatePassword(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.updatePassword(token, user);
     }
 
@@ -133,7 +137,7 @@ public class UserController {
      * @return Reply
      */
     @PostMapping("/v1.1/users/{id}/sign")
-    public Reply resetPassword(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply resetPassword(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.resetPassword(token, user);
     }
 
@@ -145,7 +149,7 @@ public class UserController {
      * @return Reply
      */
     @PutMapping("/v1.1/users/{id}/paypw")
-    public Reply updatePayPassword(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply updatePayPassword(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.updatePayPassword(token, user);
     }
 
@@ -157,7 +161,7 @@ public class UserController {
      * @return Reply
      */
     @PutMapping("/v1.1/users/{id}/status")
-    public Reply updateUserStatus(@RequestHeader("Authorization") String token, @RequestBody User user) {
+    public Reply updateUserStatus(@RequestHeader("Authorization") String token, @RequestBody User user) throws Exception {
         return services.updateUserStatus(token, user);
     }
 

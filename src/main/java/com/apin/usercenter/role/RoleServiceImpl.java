@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -96,23 +97,46 @@ public class RoleServiceImpl implements RoleService {
     /**
      * 新增角色
      *
-     * @param token 访问令牌
-     * @param role  角色实体数据
+     * @param token  访问令牌
+     * @param role   角色实体数据
+     * @param secret 验证用的安全码(初始化角色时使用)
      * @return Reply
      */
     @Override
-    public Reply addRole(String token, Role role) {
+    @Transactional
+    public Reply addRole(String token, Role role, String secret) {
         Date now = new Date();
 
         // 验证令牌
         Verify verify = new Verify(core, redis, token);
         Reply reply = verify.compare("AddRole");
-        if (!reply.getSuccess()) return reply;
+        if (!reply.getSuccess() && secret == null) return reply;
+
+        if (secret != null) {
+            String userId = redis.opsForValue().get(secret);
+            if (userId == null || !userId.equals(verify.getUserId())) {
+                return ReplyHelper.invalidParam();
+            }
+        }
+
+        // 初始化角色数据
+        role.setApplicationId(verify.getAppId());
+        role.setAccountId(verify.getAccountId());
+        role.setBuiltin(false);
+        role.setCreatorUserId(verify.getUserId());
+        role.setCreatedTime(new Date());
+
+        // 持久化角色对象
+        Integer count = roleMapper.addRole(role);
+        if (role.getFunctions() == null) return ReplyHelper.invalidParam("缺少角色授权功能集合");
+
+        count += roleMapper.addRoleFunction(role);
+        if (role.getMembers() != null) count += roleMapper.addRoleMember(role.getMembers());
 
         long time = new Date().getTime() - now.getTime();
-        logger.info("getUsers耗时:" + time + "毫秒...");
+        logger.info("addRole耗时:" + time + "毫秒...");
 
-        return ReplyHelper.success();
+        return count > 0 ? ReplyHelper.success() : ReplyHelper.error();
     }
 
     /**
@@ -131,10 +155,12 @@ public class RoleServiceImpl implements RoleService {
         Reply reply = verify.compare("DeleteRole");
         if (!reply.getSuccess()) return reply;
 
-        long time = new Date().getTime() - now.getTime();
-        logger.info("getUsers耗时:" + time + "毫秒...");
+        Integer count = roleMapper.deleteRole(roleId);
 
-        return ReplyHelper.success();
+        long time = new Date().getTime() - now.getTime();
+        logger.info("deleteRole耗时:" + time + "毫秒...");
+
+        return count > 0 ? ReplyHelper.success() : ReplyHelper.error();
     }
 
     /**
@@ -145,6 +171,7 @@ public class RoleServiceImpl implements RoleService {
      * @return Reply
      */
     @Override
+    @Transactional
     public Reply updateRole(String token, Role role) {
         Date now = new Date();
 
@@ -153,10 +180,14 @@ public class RoleServiceImpl implements RoleService {
         Reply reply = verify.compare("EditRole");
         if (!reply.getSuccess()) return reply;
 
-        long time = new Date().getTime() - now.getTime();
-        logger.info("getUsers耗时:" + time + "毫秒...");
+        Integer count = roleMapper.updateRole(role);
+        count += roleMapper.removeRoleFunction(role.getId());
+        count += roleMapper.addRoleFunction(role);
 
-        return ReplyHelper.success();
+        long time = new Date().getTime() - now.getTime();
+        logger.info("updateRole耗时:" + time + "毫秒...");
+
+        return count > 0 ? ReplyHelper.success() : ReplyHelper.error();
     }
 
     /**
@@ -175,10 +206,12 @@ public class RoleServiceImpl implements RoleService {
         Reply reply = verify.compare("AddRoleMember");
         if (!reply.getSuccess()) return reply;
 
-        long time = new Date().getTime() - now.getTime();
-        logger.info("getUsers耗时:" + time + "毫秒...");
+        Integer count = roleMapper.addRoleMember(members);
 
-        return ReplyHelper.success();
+        long time = new Date().getTime() - now.getTime();
+        logger.info("addRoleMember耗时:" + time + "毫秒...");
+
+        return count > 0 ? ReplyHelper.success() : ReplyHelper.error();
     }
 
     /**
@@ -197,9 +230,11 @@ public class RoleServiceImpl implements RoleService {
         Reply reply = verify.compare("RemoveRoleMember");
         if (!reply.getSuccess()) return reply;
 
-        long time = new Date().getTime() - now.getTime();
-        logger.info("getUsers耗时:" + time + "毫秒...");
+        Integer count = roleMapper.removeRoleMember(list);
 
-        return ReplyHelper.success();
+        long time = new Date().getTime() - now.getTime();
+        logger.info("removeRoleMember耗时:" + time + "毫秒...");
+
+        return count > 0 ? ReplyHelper.success() : ReplyHelper.error();
     }
 }

@@ -3,6 +3,7 @@ package com.apin.usercenter.component;
 import com.apin.usercenter.auth.dto.RefreshToken;
 import com.apin.usercenter.auth.dto.TokenPackage;
 import com.apin.usercenter.common.entity.Function;
+import com.apin.usercenter.common.entity.Token;
 import com.apin.usercenter.common.mapper.AuthMapper;
 import com.apin.usercenter.common.mapper.UserMapper;
 import com.apin.util.Encryptor;
@@ -31,13 +32,14 @@ import java.util.concurrent.TimeUnit;
  */
 @Component()
 public class Core {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Autowired
     private StringRedisTemplate redis;
     @Autowired
     private AuthMapper authMapper;
     @Autowired
     private UserMapper userMapper;
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // RSA公钥
     private final String publicKey = "";

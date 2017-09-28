@@ -1,4 +1,4 @@
-package com.apin.usercenter.component;
+package com.apin.usercenter.common.entity;
 
 import com.apin.util.Generator;
 

@@ -28,7 +28,7 @@ public class AuthController {
      */
     @GetMapping("/v1.1/tokens/codes")
     public Reply getCode(@RequestParam(value = "appid", required = false) String appId, @RequestParam String account,
-                         @RequestParam(defaultValue = "0") int type, @RequestParam(required = false) String appName) {
+                         @RequestParam(defaultValue = "0") int type, @RequestParam(required = false) String appName) throws Exception {
         return service.getCode(appId, account, type, appName);
     }
 
@@ -46,7 +46,7 @@ public class AuthController {
      */
     @GetMapping(value = "/v1.1/tokens")
     public Reply getToken(@RequestParam(value = "appid", required = false) String appId, @RequestParam String account,
-                          @RequestParam String signature, @RequestParam(required = false) String deptId) {
+                          @RequestParam String signature, @RequestParam(required = false) String deptId) throws Exception {
         return service.getToken(appId, account, signature, deptId);
     }
 
@@ -60,7 +60,7 @@ public class AuthController {
      * 异常：请求间隔低于5分钟时返回请求过于频繁的错误
      */
     @PutMapping(value = "/v1.1/tokens")
-    public Reply refreshToken(@RequestHeader("Authorization") String token) {
+    public Reply refreshToken(@RequestHeader("Authorization") String token) throws Exception {
         return service.refreshToken(token);
     }
 
@@ -75,7 +75,8 @@ public class AuthController {
      * 异常：令牌过期时返回令牌过期的错误
      */
     @GetMapping("/v1.1/tokens/secret")
-    public Reply verifyToken(@RequestHeader("Authorization") String token, @RequestParam(value = "function", required = false) String function) {
+    public Reply verifyToken(@RequestHeader("Authorization") String token,
+                             @RequestParam(value = "function", required = false) String function) throws Exception {
         return service.verifyToken(token, function);
     }
 
@@ -89,7 +90,8 @@ public class AuthController {
      * 异常：无法解析访问令牌、用户不存在、用户失效或令牌失效时返回令牌非法的错误
      */
     @GetMapping("/v1.1/tokens/paypw")
-    public Reply verifyPayPassword(@RequestHeader("Authorization") String token, @RequestParam("paypw") String payPassword) {
+    public Reply verifyPayPassword(@RequestHeader("Authorization") String token,
+                                   @RequestParam("paypw") String payPassword) throws Exception {
         return service.verifyPayPassword(token, payPassword);
     }
 
@@ -103,7 +105,8 @@ public class AuthController {
      * 异常：无法解析访问令牌、用户不存在、用户失效或令牌失效时返回令牌非法的错误
      */
     @GetMapping("/v1.1/modules")
-    public Reply getNavigators(@RequestHeader("Authorization") String token, @RequestHeader("Application") String appId) {
+    public Reply getNavigators(@RequestHeader("Authorization") String token,
+                               @RequestHeader("Application") String appId) throws Exception {
         return service.getNavigators(token, appId);
     }
 
@@ -117,7 +120,8 @@ public class AuthController {
      * 异常：无法解析访问令牌、用户不存在、用户失效或令牌失效时返回令牌非法的错误
      */
     @GetMapping("/v1.1/modules/{id}/functions")
-    public Reply getModuleFunctions(@RequestHeader("Authorization") String token, @PathVariable("id") String moduleId) {
+    public Reply getModuleFunctions(@RequestHeader("Authorization") String token,
+                                    @PathVariable("id") String moduleId) throws Exception {
         return service.getModuleFunctions(token, moduleId);
     }
 
@@ -136,7 +140,7 @@ public class AuthController {
     @GetMapping("/v1.1/smscodes/{type}/{mobile}")
     public Reply getSmsCode(@RequestHeader("Authorization") String token, @PathVariable("type") int type,
                             @PathVariable("mobile") String mobile, @RequestParam("minutes") int minutes,
-                            @RequestParam(value = "length", defaultValue = "6") int length) {
+                            @RequestParam(value = "length", defaultValue = "6") int length) throws Exception {
         return service.getSmsCode(token, type, mobile, minutes, length);
     }
 
@@ -154,7 +158,7 @@ public class AuthController {
     @DeleteMapping("/v1.1/smscodes/{type}/{mobile}/{code}")
     public Reply verifySmsCode(@RequestHeader("Authorization") String token, @PathVariable("type") int type,
                                @PathVariable("mobile") String mobile, @PathVariable("code") String code,
-                               @RequestParam(value = "check", defaultValue = "false") Boolean isCheck) {
+                               @RequestParam(value = "check", defaultValue = "false") Boolean isCheck) throws Exception {
         return service.verifySmsCode(token, type, mobile, code, isCheck);
     }
 

@@ -2,9 +2,10 @@ package com.apin.usercenter.user;
 
 import com.apin.usercenter.auth.dto.TokenPackage;
 import com.apin.usercenter.common.Verify;
+import com.apin.usercenter.common.entity.Token;
 import com.apin.usercenter.common.mapper.UserMapper;
 import com.apin.usercenter.component.Core;
-import com.apin.usercenter.component.Token;
+import com.apin.util.Generator;
 import com.apin.util.ReplyHelper;
 import com.apin.util.pojo.Reply;
 import com.apin.util.pojo.User;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 宣炳刚
@@ -109,22 +111,25 @@ public class UserServicesImpl implements UserServices {
     /**
      * 注册用户
      *
-     * @param token 访问令牌
-     * @param user  User实体
+     * @param token    访问令牌
+     * @param user     User实体,来自Body
+     * @param initRole 是否初始化角色
      * @return Reply
      */
     @Override
-    public Reply signUp(String token, User user) {
+    public Reply signUp(String token, User user, Boolean initRole) {
         Date now = new Date();
 
-        // 验证令牌
+        // 验证公共令牌
         Verify verify = new Verify(core, redis, token);
         Reply reply = verify.compare();
         if (!reply.getSuccess()) return reply;
 
+        // 验证短信验证码
         Boolean success = core.verifySmsCode(1, user.getMobile(), user.getOption(), false);
         if (!success) return ReplyHelper.invalidCode();
 
+        // 初始化并持久化用户对象
         user.setApplicationId(verify.getAppId());
         user.setBuiltin(false);
         user.setInvalid(false);
@@ -132,17 +137,25 @@ public class UserServicesImpl implements UserServices {
         Integer count = userMapper.addUser(user);
 
         String userId = core.getUserId(verify.getAppId(), user.getAccount());
-        if (userId == null) return ReplyHelper.notExist();
+        if (userId == null) return ReplyHelper.error();
 
+        // 初始化令牌数据并返回，实现自动登录功能
         Token accessToken = core.getToken(user.getId());
         String code = core.generateCode(accessToken, 0, null);
         core.initAccessToken(accessToken);
         TokenPackage tokens = core.creatorKey(accessToken, code);
 
+        // 生成初始化角色时验证用的key
+        String key = null;
+        if (initRole) {
+            key = Generator.uuid();
+            redis.opsForValue().set(key, userId, 5, TimeUnit.SECONDS);
+        }
+
         long time = new Date().getTime() - now.getTime();
         logger.info("addUser耗时:" + time + "毫秒...");
 
-        return count > 0 ? ReplyHelper.success(tokens) : ReplyHelper.error();
+        return count > 0 ? ReplyHelper.success(tokens, key) : ReplyHelper.error();
     }
 
     /**

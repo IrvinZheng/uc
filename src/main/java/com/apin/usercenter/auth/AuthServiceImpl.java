@@ -7,7 +7,7 @@ import com.apin.usercenter.common.entity.Function;
 import com.apin.usercenter.common.entity.Navigator;
 import com.apin.usercenter.common.mapper.AuthMapper;
 import com.apin.usercenter.component.Core;
-import com.apin.usercenter.component.Token;
+import com.apin.usercenter.common.entity.Token;
 import com.apin.util.Generator;
 import com.apin.util.JsonUtils;
 import com.apin.util.ReplyHelper;
@@ -107,10 +107,12 @@ public class AuthServiceImpl implements AuthService {
         if (code == null) return ReplyHelper.invalidPassword();
 
         String userId = core.getUserId(appId, account);
-        if (userId == null) return ReplyHelper.notExist();
+        if (userId == null) return ReplyHelper.error();
 
         Token token = core.getToken(userId);
-        if (token == null) return ReplyHelper.fail();
+        if (token == null) return ReplyHelper.error();
+
+        if (core.isInvalid(token)) return ReplyHelper.fail("用户被禁止登录");
 
         core.initAccessToken(token);
         TokenPackage tokens = core.creatorKey(token, code, deptId);
@@ -283,6 +285,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Reply verifySmsCode(String token, int type, String mobile, String code, Boolean isCheck) {
         Date now = new Date();
+
         // 验证令牌
         Verify verify = new Verify(core, redis, token);
         Reply reply = verify.compare();
@@ -294,5 +297,4 @@ public class AuthServiceImpl implements AuthService {
 
         return success ? ReplyHelper.success() : ReplyHelper.invalidParam("验证码错误！");
     }
-
 }

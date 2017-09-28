@@ -33,11 +33,12 @@ public interface RoleService {
     /**
      * 新增角色
      *
-     * @param token 访问令牌
-     * @param role  角色实体数据
+     * @param token  访问令牌
+     * @param role   角色实体数据
+     * @param secret 验证用的安全码(初始化角色时使用)
      * @return Reply
      */
-    Reply addRole(String token, Role role);
+    Reply addRole(String token, Role role, String secret);
 
     /**
      * 删除角色

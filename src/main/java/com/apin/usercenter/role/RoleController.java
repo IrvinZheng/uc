@@ -26,7 +26,7 @@ public class RoleController {
      * @return Reply
      */
     @GetMapping("/v1.1/roles")
-    public Reply getRoles(@RequestHeader("Authorization") String token) {
+    public Reply getRoles(@RequestHeader("Authorization") String token) throws Exception {
         return service.getRoles(token);
     }
 
@@ -37,20 +37,22 @@ public class RoleController {
      * @return Reply
      */
     @GetMapping("/v1.1/roles/{id}")
-    public Reply getRole(@RequestHeader("Authorization") String token, @PathVariable("id") String roleId) {
+    public Reply getRole(@RequestHeader("Authorization") String token, @PathVariable("id") String roleId) throws Exception {
         return service.getRole(token, roleId);
     }
 
     /**
      * 新增角色
      *
-     * @param token 访问令牌
-     * @param role  角色实体数据
+     * @param token  访问令牌
+     * @param role   角色实体数据
+     * @param secret 验证用的安全码(初始化角色时使用)
      * @return Reply
      */
     @PostMapping("/v1.1/roles")
-    public Reply addRole(@RequestHeader("Authorization") String token, @RequestBody Role role) {
-        return service.addRole(token, role);
+    public Reply addRole(@RequestHeader("Authorization") String token, @RequestBody Role role,
+                         @RequestParam(required = false) String secret) throws Exception {
+        return service.addRole(token, role, secret);
     }
 
     /**
@@ -61,7 +63,7 @@ public class RoleController {
      * @return Reply
      */
     @DeleteMapping("/v1.1/roles/{id}")
-    public Reply deleteRole(@RequestHeader("Authorization") String token, @PathVariable("id") String roleId) {
+    public Reply deleteRole(@RequestHeader("Authorization") String token, @PathVariable("id") String roleId) throws Exception {
         return service.deleteRole(token, roleId);
     }
 
@@ -73,7 +75,7 @@ public class RoleController {
      * @return Reply
      */
     @PutMapping("/v1.1/roles/{id}")
-    public Reply updateRole(@RequestHeader("Authorization") String token, @RequestBody Role role) {
+    public Reply updateRole(@RequestHeader("Authorization") String token, @RequestBody Role role) throws Exception {
         return service.updateRole(token, role);
     }
 
@@ -85,7 +87,7 @@ public class RoleController {
      * @return Reply
      */
     @PostMapping("/v1.1/roles/{id}/members")
-    public Reply addRoleMember(@RequestHeader("Authorization") String token, @RequestBody List<Member> members) {
+    public Reply addRoleMember(@RequestHeader("Authorization") String token, @RequestBody List<Member> members) throws Exception {
         return service.addRoleMember(token, members);
     }
 
@@ -97,7 +99,7 @@ public class RoleController {
      * @return Reply
      */
     @DeleteMapping("/v1.1/roles/{id}/members")
-    public Reply removeRoleMember(@RequestHeader("Authorization") String token, @RequestBody List<String> list) {
+    public Reply removeRoleMember(@RequestHeader("Authorization") String token, @RequestBody List<String> list) throws Exception {
         return service.removeRoleMember(token, list);
     }
 }
